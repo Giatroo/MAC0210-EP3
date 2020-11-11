@@ -1,0 +1,150 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt, a4paper, oneside]{article}
+
+\input{/home/giatro/.config/user/giatro_packages.tex}
+
+\input{/home/giatro/.config/user/giatro_macros.tex}
+
+\title{Relatório do EP3 de Laboratório de Métodos Numéricos}
+\date{\today}
+\author{Lucas Paiolla Forastiere - 11221911}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+\section*{Parte 1}
+
+A parte 1 foi bastante simples. Temos inicialmente o método \textsc{newton} 
+que utiliza o Método das Diferenças Divididas de Newton para achar os coeficientes
+de um polinômio interpolador. A função recebe um conjunto de \textsc{n} pontos
+com suas coordenadas \textsc{x} e \textsc{y} e retorna um vetor de \textsc{n}
+coeficientes do polinômio interpolador dos pontos - o primeiro elemento do vetor 
+é o coeficiente livre e o último é o coeficiente de $x^n$.
+
+Depois, temos uma função \textsc{f}, que retorna o valor do polinômio interpolador
+para o ponto $x$. Ela recebe esse valor $x$ e também precisa de um vetor 
+\textsc{x0} com os valores em $x$ que interpolamos. Por fim, ela precisa também 
+dos coeficientes que calculamos por Newton. Passamos eles como um parâmetro pois
+não queremos ter de calcular esses coeficientes em cada avaliação.
+
+Após termos essas funções definidas, criamos as funções \textsc{TrapezoidRule} e\nl
+\textsc{SimpsonRule} que são a implementação das fórmulas do Trapézio e de 
+Simpson. Essas funções recebem um valor \textsc{n} indicando o número de intervalos,
+valores \textsc{a} e \textsc{b} que são os limites da integração, os valores 
+de $x$ dos pontos de interpolação, os coeficientes do polinômio interpolador e
+o número de pontos interpolados.
+
+Por fim, temos a \textsc{main} com o conjunto de pontos que se pede para interpolar
+e é onde chamamos as outras funções para obter os resultados das interpolações
+utilizando trapézio e Simpson.
+
+\section*{Parte 2}
+
+Essa parte foi também bastante simples de implementar, pois se criou apenas uma
+função genérica com a implementação de Monte Carlo e depois cada questão foi 
+implementada separadamente (falaremos disso mais tarde).
+
+A função \textsc{montecarlo} recebe um valor \textsc{n}, indicando o número de pontos 
+que vamos avaliar, recebe uma função \textsc{f} que é a função que estamos 
+querendo integrar, recebe um vetor de pares ordenados chamado \textsc{limits} e 
+recebe um valor \textsc{m} indicando a quantidade de dimensões da integral.
+
+A função assume então as seguintes coisas: 
+\begin{itemize}
+\item A função \textsc{f} é uma função de 
+\textsc{m} dimensões (ou seja, o parâmetro \textsc{*double} de \textsc{f} é um
+vetor de \textsc{m} valores);
+\item O vetor \textsc{limits} possui \textsc{m} pares ordenados em que 
+\textsc{limits[0]} indica os limites inferior e superior da primeira integral,
+\textsc{limits[1]} indica os limites inferior e superior da segunda integral
+e assim por diante até \textsc{limits[m-1]}.
+\end{itemize}
+
+Utilizamos então o método de Monte Carlo e sorteamos cada coordenada do vetor
+\textsc{X} que é o argumento da função \textsc{f}. Para fazer esse sorteio, 
+utilizamos a transformação linear:
+$$X=(\textsc{limits}_1-\textsc{limits}_0)\lambda+\textsc{limits}_0,$$
+
+onde $\lambda$ é um vetor aleatório com cada coordenada 
+entre $0$ e $1$, $\textsc{limits}_0$ é um vetor de coordenadas com os limites 
+inferiores de cada uma das integrais em ordem e $\textsc{limits}_1$ a mesma coisa,
+mas para os limites superiores. Todos esses vetores possuem \textsc{m} coordenadas.
+
+Perceba que se $m=1$, então essa fórmula pode ser escrita como:
+$$x=(b-a)\lambda+a$$
+
+O que na prática essa transformação faz é pegar um ponto $X$ aleatório dentro 
+do \textit{domínio de integração}. Nos utilizamos da hipótese que os números
+aleatórios são gerados de forma uniforme e, portanto, temos que nosso método 
+toma valores uniformemente dentro das possibilidades do domínio de integração
+(que seria nosso espaço amostral).
+
+Depois, a tarefa é simples, criamos, para cada integral pedida, uma função
+que recebe um vetor \textsc{x} e utiliza esse vetor para calcular as funções
+que queremos integrar em cada caso. Essas função são as funções
+\textsc{f1}, \textsc{f2}, \textsc{f3} e \textsc{f4}. E depois, para cada 
+uma delas, criamos uma função que vai criar um vetor de pares ordenados com 
+os limites de cada integral associada ao problema e chamar o método 
+de Monte Carlo para a sua respectiva função, com o determinado valor 
+de \textsc{m} e os limites daquele problema. É mais fácil olhar diretamente no
+código.
+
+\subsection*{Adendo sobre a questão 3}
+
+Todas as integrais possuem intervalos de integração finitos e relativamente 
+pequenos quando comparamos com o número de pontos aleatórios que estamos 
+avaliando. Entretanto, a terceira questão possui um intervalo de integração
+infinito e daí simplesmente não conseguimos aplicar normalmente a transformação
+linear desejada, pois o limite superior seria infinito (o que não conseguimos
+representar no computador). Assim sendo, precisamos decidir um valor para o limite
+superior que não comprometa nossa integração.
+
+(Poderíamos também utilizar uma outra transformação para essa questão em particular,
+mas devido à forma como construímos a função \textsc{montecarlo}, isso não seria
+ideal.)
+
+Portanto, para verificar qual seria o melhor limite superior, utilizou-se um 
+método empírico (já que não sei fazer isso de forma analítica). Testou-se 
+os seguintes valores de $b$ (o limite superior da integral):
+\begin{itemize}
+\item $1$;
+\item $10$;
+\item $100$;
+\item $1000$;
+\item $100000$.
+\end{itemize}
+
+Para cada um, fizemos cinco testes (para minimar as aleatoriedades do método de
+Monte Carlo). Os resultados são monstrados a seguir:
+
+\begin{center}
+\begin{tabular}{|| c c c c c ||}
+\hline
+$1$ & $10$ & $100$ & $1000$ & $100000$ \\ [0.5ex]
+\hline\hline
+$0.632116$ & $1.000121$ & $0.999137$ & $1.000811$ & $0.989015$ \\ [0.1ex]
+\hline
+$0.632108$ & $1.000218$ & $0.999656$ & $1.003502$ & $1.030284$ \\ [0.1ex]
+\hline
+$0.632124$ & $0.999846$ & $1.000460$ & $1.000977$ & $0.996152$ \\ [0.1ex]
+\hline
+$0.632124$ & $1.000094$ & $1.000749$ & $1.001545$ & $1.012699$ \\ [0.1ex]
+\hline
+$0.632109$ & $0.999912$ & $0.999740$ & $0.997264$ & $1.006466$ \\ [1ex]
+\hline
+\end{tabular}
+\end{center}
+
+A função que fez esses testes é a \textsc{questao3testes}. Com base nisso,
+optou-se por deixar o valor de $b=10$, pois vemos que com esse limite estamos
+bem próximos do valor real da integral e também vemos que para valores de 
+$b$ muito altos ou muito pequenos, começamos a ter imprecisões.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
